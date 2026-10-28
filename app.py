@@ -138,9 +138,9 @@ with tab2:
     st.plotly_chart(fig_pred_real, use_container_width=True)
 
 with tab3:
-    st.subheader("Resumen de Hallazgos para la Defensa")
+    st.subheader("Resumen de hallazgos:")
     st.markdown("""
     * **Desempeño Global:** El modelo alcanza un $R^2 \\approx 0.9562$ en el conjunto de prueba y un promedio de $R^2 \\approx 0.9221$ en validación cruzada temporal (`TimeSeriesSplit`).
-    * **Importancia de Características:** `Lag_1` (77%) y `POTENCIA_PROXY` (11%) constituyen los factores determinantes que explican la alta precisión del modelo.
-    * **Rigor Metodológico:** El uso de validación cruzada secuencial previene el *data leakage*, garantizando la robustez y estabilidad estructural del modelo frente a diferentes cortes temporales.
+    * **Importancia de características:** `Lag_1` (77%) y `POTENCIA_PROXY` (11%) constituyen los factores determinantes que explican la alta precisión del modelo.
+    * **Rigor metodológico:** El uso de validación cruzada secuencial previene el *data leakage*, garantizando la robustez y estabilidad estructural del modelo frente a diferentes cortes temporales.
     """)
