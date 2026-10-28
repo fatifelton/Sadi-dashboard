@@ -12,10 +12,9 @@ st.set_page_config(
 )
 
 # Título y subtítulo
-st.title("⚡ Dashboard Interactivo: Modelo de Generación Renovable SADI")
+st.title("⚡ Dashboard Interactivo: Modelo Random Forest - SADI")
 st.markdown(
-    "Visualización interactiva del desempeño del modelo, análisis de residuos"
-    " y métricas principales."
+    "Visualización interactiva del desempeño del modelo, validación cruzada temporal y análisis de residuos."
 )
 
 st.divider()
@@ -26,26 +25,26 @@ st.divider()
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-  st.metric(label="R² Score", value="0.9834", delta="Excelente ajuste")
+    st.metric(label="R² Test Set", value="0.9562", delta="CV Promedio: 0.9221")
 
 with col2:
-  st.metric(
-      label="Error Absoluto Medio (MAE)",
-      value="0.7824 GWh",
-      delta="-0.02 vs baseline",
-      delta_color="normal",
-  )
+    st.metric(
+        label="Validación Cruzada",
+        value="TimeSeriesSplit",
+        delta="5 Folds cronológicos",
+        delta_color="normal",
+    )
 
 with col3:
-  st.metric(
-      label="Raíz Error Cuadrático (RMSE)",
-      value="1.6441 GWh",
-      delta="Impacto de outliers bajo",
-      delta_color="normal",
-  )
+    st.metric(
+        label="Estabilidad (Std R²)",
+        value="0.0571",
+        delta="Baja dispersión",
+        delta_color="normal",
+    )
 
 with col4:
-  st.metric(label="Variable Clave", value="ROLLING_MEAN_3", delta="Importancia")
+    st.metric(label="Variable Clave", value="Lag_1", delta="77% Importancia")
 
 st.divider()
 
@@ -68,7 +67,7 @@ nivel_ruido = st.sidebar.slider(
     step=0.1,
 )
 
-# Generar datos simulados representativos
+# Generar datos simulados representativos alineados al modelo
 np.random.seed(42)
 predichos = np.random.uniform(0.5, 80.0, num_puntos)
 residuos = np.random.normal(0, (predichos / 15 + 0.3) * nivel_ruido)
@@ -79,70 +78,69 @@ df = pd.DataFrame(
 )
 
 tab1, tab2, tab3 = st.tabs([
-    "📊 Residuos y Heteroscedasticidad",
+    "📊 Residuos y Restricción Física",
     "📈 Predicho vs Real",
-    "📝 Conclusiones Técnicas",
+    "📝 Conclusiones Metodológicas",
 ])
 
 with tab1:
-  st.subheader("Gráfico Interactivo de Residuos")
-  st.write(
-      "Pasa el cursor sobre los puntos para inspeccionar los valores reales vs"
-      " predichos."
-  )
+    st.subheader("Gráfico de Residuos (Análisis de Errores)")
+    st.write(
+        "Se observa la distribución de los residuos frente a los valores predichos, destacando la restricción física de cero generación."
+    )
 
-  fig_residuos = px.scatter(
-      df,
-      x="Predicho",
-      y="Residuo",
-      opacity=0.6,
-      color_discrete_sequence=["#008080"],
-      labels={
-          "Predicho": "Valores Predichos (GWh)",
-          "Residuo": "Residuo (Real - Predicho)",
-      },
-      title="Residuos vs Valores Predichos",
-  )
-  fig_residuos.add_hline(
-      y=0, line_dash="dash", line_color="purple", annotation_text="Sesgo 0"
-  )
-  fig_residuos.update_layout(template="plotly_white", height=500)
+    fig_residuos = px.scatter(
+        df,
+        x="Predicho",
+        y="Residuo",
+        opacity=0.4,
+        color_discrete_sequence=["#008080"],
+        labels={
+            "Predicho": "Valores Predichos (GWh)",
+            "Residuo": "Residuo (Real - Predicho)",
+        },
+        title="Gráfico de Residuos - Random Forest",
+    )
+    fig_residuos.add_hline(
+        y=0, line_dash="dash", line_color="purple", annotation_text="Sesgo 0"
+    )
+    fig_residuos.update_layout(template="plotly_white", height=500)
 
-  st.plotly_chart(fig_residuos, use_container_width=True)
+    st.plotly_chart(fig_residuos, use_container_width=True)
 
 with tab2:
-  st.subheader("Comparativa: Valores Predichos vs Valores Reales")
+    st.subheader("Comparativa: Valores Predichos vs Valores Reales")
 
-  fig_pred_real = px.scatter(
-      df,
-      x="Predicho",
-      y="Real",
-      opacity=0.6,
-      color_discrete_sequence=["#2a9d8f"],
-      labels={
-          "Predicho": "Valores Predichos (GWh)",
-          "Real": "Valores Reales (GWh)",
-      },
-      title="Ajuste del Modelo (Línea ideal de 45°)",
-  )
-  max_val = max(df["Predicho"].max(), df["Real"].max())
-  fig_pred_real.add_trace(
-      go.Scatter(
-          x=[0, max_val],
-          y=[0, max_val],
-          mode="lines",
-          name="Ajuste Perfecto",
-          line=dict(color="red", dash="dash"),
-      )
-  )
-  fig_pred_real.update_layout(template="plotly_white", height=500)
+    fig_pred_real = px.scatter(
+        df,
+        x="Predicho",
+        y="Real",
+        opacity=0.4,
+        color_discrete_sequence=["#2a9d8f"],
+        labels={
+            "Predicho": "Valores Predichos (GWh)",
+            "Real": "Energía Real (GWh)",
+        },
+        title="Valores Reales vs. Predichos (Línea de predicción perfecta 45°)",
+    )
+    max_val = max(df["Predicho"].max(), df["Real"].max())
+    fig_pred_real.add_trace(
+        go.Scatter(
+            x=[0, max_val],
+            y=[0, max_val],
+            mode="lines",
+            name="Predicción perfecta",
+            line=dict(color="green", dash="dash"),
+        )
+    )
+    fig_pred_real.update_layout(template="plotly_white", height=500)
 
-  st.plotly_chart(fig_pred_real, use_container_width=True)
+    st.plotly_chart(fig_pred_real, use_container_width=True)
 
 with tab3:
-  st.subheader("Resumen de Hallazgos")
-  st.markdown("""
-    * **Excelente Capacidad Predictiva:** El ajuste de R² = 0.9834 muestra una alta correlación entre las características temporales/técnicas y la producción final.
-    * **Evaluación de Errores:** Con un MAE de 0.7824, el error promedio es marginal en relación con la escala de operación general de la red.
-    * **Justificación Teórica:** La dispersión observada en los picos de generación no responde a un fallo del modelo, sino a la impredecibilidad meteorológica inherente (viento y radiación) que afecta la generación renovable a gran escala.
+    st.subheader("Resumen de Hallazgos para la Defensa")
+    st.markdown("""
+    * **Desempeño Global:** El modelo alcanza un $R^2 \\approx 0.9562$ en el conjunto de prueba y un promedio de $R^2 \\approx 0.9221$ en validación cruzada temporal (`TimeSeriesSplit`).
+    * **Importancia de Características:** `Lag_1` (77%) y `POTENCIA_PROXY` (11%) constituyen los factores determinantes que explican la alta precisión del modelo.
+    * **Rigor Metodológico:** El uso de validación cruzada secuencial previene el *data leakage*, garantizando la robustez y estabilidad estructural del modelo frente a diferentes cortes temporales.
     """)
